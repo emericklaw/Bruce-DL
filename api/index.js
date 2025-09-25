@@ -2,11 +2,6 @@ export const config = {
   runtime: "edge",
 };
 
-const ALLOWED = [
-  { owner: "pr3y", repo: "Bruce" },
-  { owner: "bmorcelli", repo: "Launcher" },
-];
-
 export default async function handler(req) {
   const { searchParams } = new URL(req.url);
   const owner = searchParams.get("owner");
@@ -24,11 +19,20 @@ export default async function handler(req) {
     );
   }
 
-  // Check against whitelist
-  const allowed = ALLOWED.some(
+  // Parse allowed repos from environment variable
+  const allowedString = process.env.ALLOWED_REPOS || "";
+  const allowed = allowedString
+    .split(",")
+    .map((item) => {
+      const [o, r] = item.split(":");
+      return { owner: o, repo: r };
+    });
+
+  const isAllowed = allowed.some(
     (item) => item.owner === owner && item.repo === repo
   );
-  if (!allowed) {
+
+  if (!isAllowed) {
     return new Response(
       JSON.stringify({ error: "This repository is not allowed" }),
       {
@@ -52,7 +56,7 @@ export default async function handler(req) {
       );
     }
 
-    const body = await response.arrayBuffer();
+    const body = await response.arrayBuffer(); // support binary
 
     return new Response(body, {
       status: 200,
