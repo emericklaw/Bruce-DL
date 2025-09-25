@@ -52,7 +52,7 @@ export default async function handler(req) {
       );
     }
 
-    const body = await response.arrayBuffer(); // handle binary files
+    const body = await response.arrayBuffer();
 
     return new Response(body, {
       status: 200,
